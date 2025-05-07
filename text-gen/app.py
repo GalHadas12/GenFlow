@@ -7,7 +7,8 @@ app = FastAPI()
 
 # force CPU
 device = "cpu"
-generator = pipeline("text-generation", model="gpt2", device_map={"": device})
+generator = pipeline("text-generation", model="gpt2")
+
 
 class GenRequest(BaseModel):
     inputs: str
