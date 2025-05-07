@@ -9,15 +9,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       curl \
       libgl1 \
       libglib2.0-0 \
-      libopenblas-base \
       libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Upgrade pip and install Python packages (CPU-only PyTorch)
+# 2. Upgrade pip and install Python packages (CPU-only PyTorch wheels)
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
       fastapi \
-      uvicorn[standard] \
+      "uvicorn[standard]" \
       torch --index-url https://download.pytorch.org/whl/cpu \
       diffusers \
       transformers \
@@ -25,10 +24,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
       accelerate \
       safetensors
 
-# 3. Copy your FastAPI app
 WORKDIR /app
 COPY app.py .
 
-# 4. Expose and launch
 EXPOSE 7860
 CMD ["uvicorn", "app:app", "--host", "127.0.0.1", "--port", "7860"]
