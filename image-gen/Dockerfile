@@ -2,31 +2,33 @@
 
 FROM python:3.10-slim
 
-# 1. System deps + curl
-RUN apt update && apt install -y --no-install-recommends \
+# 1. Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential \
+      git \
+      curl \
       libgl1 \
       libglib2.0-0 \
-      curl \
+      libopenblas-base \
+      libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install uv into /usr/local/bin
-RUN curl -LsSf https://astral.sh/uv/install.sh \
-    | UV_INSTALL_DIR="/usr/local/bin" sh
-
-# 3. Ensure uv is on PATH
-ENV PATH="/usr/local/bin:${PATH}"
-
-# 4. Install all Python packages globally via uv pip
-RUN uv pip install --system --no-cache-dir \
-      fastapi uvicorn \
+# 2. Upgrade pip and install Python packages (CPU-only PyTorch)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+      fastapi \
+      uvicorn[standard] \
       torch --index-url https://download.pytorch.org/whl/cpu \
-      diffusers transformers pillow
+      diffusers \
+      transformers \
+      pillow \
+      accelerate \
+      safetensors
 
-# 5. Copy your FastAPI app
+# 3. Copy your FastAPI app
 WORKDIR /app
 COPY app.py .
 
-# 6. Launch with uv
-ENTRYPOINT ["uv"]
-CMD ["run", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "7860"]
+# 4. Expose and launch
+EXPOSE 7860
+CMD ["uvicorn", "app:app", "--host", "127.0.0.1", "--port", "7860"]
