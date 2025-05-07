@@ -2,7 +2,7 @@
 
 FROM python:3.10-slim
 
-# 1. System deps
+# 1. System deps + curl
 RUN apt update && apt install -y --no-install-recommends \
       build-essential \
       libgl1 \
@@ -10,22 +10,23 @@ RUN apt update && apt install -y --no-install-recommends \
       curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+# 2. Install uv into /usr/local/bin
+RUN curl -LsSf https://astral.sh/uv/install.sh \
+    | sh -s -- -b /usr/local/bin
 
-# 3. Create a venv (fast!) and install Python libs
-#    uv venv venv     → creates the venv/
-#    uv pip install   → pip runs inside that venv
-RUN uv venv venv && \
-    uv pip install --no-cache-dir \
+# 3. Make sure /usr/local/bin is on PATH
+ENV PATH="/usr/local/bin:${PATH}"
+
+# 4. Create venv and install Python libs inside it
+RUN uv venv venv \
+ && uv pip install --no-cache-dir \
       fastapi uvicorn \
       torch --index-url https://download.pytorch.org/whl/cpu \
       diffusers transformers pillow
 
-# 4. Copy in your FastAPI app
 WORKDIR /app
 COPY app.py .
 
-# 5. Use uv to run uvicorn inside the venv
+# 5. Use uv to launch uvicorn inside the venv
 ENTRYPOINT ["uv"]
 CMD ["run", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "7860"]
