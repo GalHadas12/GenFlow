@@ -17,12 +17,13 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
       fastapi \
       "uvicorn[standard]" \
-      torch --index-url https://download.pytorch.org/whl/cpu \
       diffusers \
       transformers \
       pillow \
       accelerate \
       safetensors
+
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
 WORKDIR /app
 COPY app.py .
